@@ -1,18 +1,47 @@
 package messages
 
-type Message struct {
-	content string
-	UserID  uint16
+import "encoding/binary"
+
+/*
+byte [0:4] - user id
+byte [4:8] - chat id
+byte [8:12] - time stamp
+byte [12:20] - messageId
+byte [20: 22] - message length
+byte [20:] - message
+*/
+
+type message []byte
+
+func UserId(m message) uint32 {
+	return binary.LittleEndian.Uint32(n[0:4])
 }
 
-func (m *Message) GetContent() string {
-	return m.content
+func ChatId(m message) uint32 {
+	return binary.LittleEndian.Uint32(n[4:8])
 }
 
-func NewMessage(content string, userID uint16) *Message {
-	return &Message{content: content, UserID: userID}
+func (m *message) getTimeStamp() uint32 {
+	return binary.LittleEndian.Uint32((*m)[8:12])
 }
 
-func (m *Message) UpdateContent(content string) {
-	m.content = content
+func (m *message) setTimeStamp(ts uint32) {
+	binary.LittleEndian.PutUint32((*m)[8:12], ts)
+}
+
+func (m *message) getMessageId() uint64 {
+	return binary.LittleEndian.Uint64((*m)[12:20])
+}
+
+func (m *message) setMessageId(id uint64) {
+	binary.LittleEndian.PutUint64((*m)[12:20], id)
+}
+
+func setHeader(m message, userId uint32, chatId uint32) {
+	binary.LittleEndian.PutUint32(m[0:4], userId)
+	binary.LittleEndian.PutUint32(m[4:8], chatId)
+}
+
+func (m *message) getMessage() []byte {
+	return (*m)[20:]
 }
